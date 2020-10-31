@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,6 +11,8 @@ public class SelectionController : MonoBehaviour
     private List<ControllableUnit> controllableUnits;
     private List<ControllableUnit> selectedUnits;
     private int selectionThreshold = 10;
+    private float timeHeld = 0f;
+    private bool selectionBoxActive = false;
 
     public RectTransform selectionBox;
     public LayerMask groundLayer;
@@ -44,10 +47,48 @@ public class SelectionController : MonoBehaviour
             unit.navMeshAgent.SetDestination(destination);
         }
     }
-    public void StartSelectionBox()
+    public void StartNewSelection()
+    {
+        ClearSelectedUnits();
+        TrySelect();
+        StartSelectionBox();
+    }
+    public void ReleaseSelectionBox()
+    {
+        if (selectionBoxActive)
+        {
+            selectionBox.gameObject.SetActive(false);
+            UpdateToggleSelectionVisual(true);
+        }
+    }
+
+
+    private void ClearSelectedUnits()
+    {
+        selectedUnits = new List<ControllableUnit>();
+        selectionBoxActive = false;
+        timeHeld = 0;
+        foreach (ControllableUnit unit in controllableUnits)
+        {
+            unit.ToggleSelectionVisual(false);
+        }
+    }
+
+    private void TrySelect()
+    {
+        Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+
+        if(Physics.Raycast(ray, out hit, 100, unitLayerMask))
+        {
+            ControllableUnit unit = hit.collider.GetComponentInParent<ControllableUnit>();
+            selectedUnits.Add(unit);
+            unit.ToggleSelectionVisual(true);
+        }
+    }
+    private void StartSelectionBox()
     {
         startPos = Input.mousePosition;
-        selectedUnits = new List<ControllableUnit>();
     }
 
     private Vector3 GetPointUnderCursor()
@@ -63,6 +104,8 @@ public class SelectionController : MonoBehaviour
     }
     public void UpdateSelectionBox(Vector2 curMousePosition)
     {
+        timeHeld += Time.deltaTime;
+        if (timeHeld > .01f) selectionBoxActive = true;
         if (!selectionBox.gameObject.activeInHierarchy) selectionBox.gameObject.SetActive(true);
 
         float width = curMousePosition.x - startPos.x;
@@ -70,25 +113,32 @@ public class SelectionController : MonoBehaviour
 
         selectionBox.sizeDelta = new Vector2(Mathf.Abs(width), Mathf.Abs(height));
         selectionBox.anchoredPosition = startPos + new Vector2(width / 2, height / 2);
+
+        UpdateToggleSelectionVisual(false);
     }
 
-    public void ReleaseSelectionBox()
+
+    private void UpdateToggleSelectionVisual(bool addUnitsToList)
     {
-        selectionBox.gameObject.SetActive(false);
-
-        Vector2 min = selectionBox.anchoredPosition - (selectionBox.sizeDelta / 2);
-        Vector2 max = selectionBox.anchoredPosition + (selectionBox.sizeDelta / 2);
-
-        foreach (ControllableUnit unit in controllableUnits)
+        if (timeHeld > .1f)
         {
+            Vector2 min = selectionBox.anchoredPosition - (selectionBox.sizeDelta / 2);
+            Vector2 max = selectionBox.anchoredPosition + (selectionBox.sizeDelta / 2);
 
-
-            Vector3 screenPos = cam.WorldToScreenPoint(unit.transform.position);
-
-            if (screenPos.x + selectionThreshold > min.x && screenPos.x - selectionThreshold < max.x && screenPos.y + selectionThreshold > min.y && screenPos.y - selectionThreshold < max.y)
+            foreach (ControllableUnit unit in controllableUnits)
             {
-                selectedUnits.Add(unit);
-                //unit.ToggleSelectionVisual(true);
+
+                Vector3 screenPos = cam.WorldToScreenPoint(unit.transform.position);
+
+                if (screenPos.x + selectionThreshold > min.x && screenPos.x - selectionThreshold < max.x && screenPos.y + selectionThreshold > min.y && screenPos.y - selectionThreshold < max.y)
+                {
+                    if (addUnitsToList) selectedUnits.Add(unit);
+                    unit.ToggleSelectionVisual(true);
+                }
+                else
+                {
+                    unit.ToggleSelectionVisual(false);
+                }
             }
         }
     }

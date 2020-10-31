@@ -5,7 +5,7 @@ using UnityEngine;
 public class ControllableUnit : Unit
 {
 
-
+    public GameObject tempSelectionVisual;
 
     // Start is called before the first frame update
     void Start()
@@ -17,5 +17,10 @@ public class ControllableUnit : Unit
     void Update()
     {
         
+    }
+
+    public void ToggleSelectionVisual(bool isVisible)
+    {
+        tempSelectionVisual.SetActive(isVisible);
     }
 }

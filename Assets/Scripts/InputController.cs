@@ -19,7 +19,7 @@ public class InputController : MonoBehaviour
         }
         if (Input.GetMouseButtonDown(0))
         {
-            selectionController.StartSelectionBox();
+            selectionController.StartNewSelection();
         }
         if (Input.GetMouseButtonUp(0))
         {
