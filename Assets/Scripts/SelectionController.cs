@@ -1,27 +1,27 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 public class SelectionController : MonoBehaviour
 {
-
     Camera cam;
     private Vector2 startPos;
     private List<ControllableUnit> controllableUnits;
     private List<ControllableUnit> selectedUnits;
     private int selectionThreshold = 10;
     private float timeHeld = 0f;
+    private float timeHeldThreshold = .1f;
     private bool selectionBoxActive = false;
 
     public RectTransform selectionBox;
     public LayerMask groundLayer;
     public LayerMask unitLayerMask;
+    public ControllableUnit activeUnit;
 
     //temp
     public ControllableUnit test;
-    public ControllableUnit test1;
-    public ControllableUnit test2;
 
     void Awake()
     {
@@ -29,37 +29,31 @@ public class SelectionController : MonoBehaviour
         controllableUnits = new List<ControllableUnit>();
         selectedUnits = new List<ControllableUnit>();
         controllableUnits.Add(test);
-        controllableUnits.Add(test1);
-        controllableUnits.Add(test2);
     }
+
+
 
     // Update is called once per frame
     void Update()
     {
-        
+        if (selectionBoxActive) UpdateSelectionBox(Input.mousePosition);
     }
 
     public void MoveSelectedUnits()
     {
+        
         Vector3 destination = GetPointUnderCursor();
         foreach(ControllableUnit unit in selectedUnits)
         {
-            unit.navMeshAgent.SetDestination(destination);
+            unit.SetDestination(destination);
         }
+        
     }
-    public void StartNewSelection()
+    public void SelectClick()
     {
         ClearSelectedUnits();
         TrySelect();
-        StartSelectionBox();
-    }
-    public void ReleaseSelectionBox()
-    {
-        if (selectionBoxActive)
-        {
-            selectionBox.gameObject.SetActive(false);
-            UpdateToggleSelectionVisual(true);
-        }
+        startPos = Input.mousePosition;
     }
 
 
@@ -84,12 +78,22 @@ public class SelectionController : MonoBehaviour
             ControllableUnit unit = hit.collider.GetComponentInParent<ControllableUnit>();
             selectedUnits.Add(unit);
             unit.ToggleSelectionVisual(true);
+            SetActiveUnit(unit);
         }
     }
-    private void StartSelectionBox()
+    public void StartSelectionBox()
     {
-        startPos = Input.mousePosition;
+        selectionBoxActive = true;
+
     }
+    public void ReleaseSelectionBox()
+    {
+        selectionBox.gameObject.SetActive(false);
+        UpdateToggleSelectionVisual(true);
+        selectionBoxActive = false;
+        print("releaseddddddddddd");
+    }
+
 
     private Vector3 GetPointUnderCursor()
     {
@@ -104,8 +108,7 @@ public class SelectionController : MonoBehaviour
     }
     public void UpdateSelectionBox(Vector2 curMousePosition)
     {
-        timeHeld += Time.deltaTime;
-        if (timeHeld > .01f) selectionBoxActive = true;
+
         if (!selectionBox.gameObject.activeInHierarchy) selectionBox.gameObject.SetActive(true);
 
         float width = curMousePosition.x - startPos.x;
@@ -120,7 +123,7 @@ public class SelectionController : MonoBehaviour
 
     private void UpdateToggleSelectionVisual(bool addUnitsToList)
     {
-        if (timeHeld > .1f)
+        if (selectionBoxActive)
         {
             Vector2 min = selectionBox.anchoredPosition - (selectionBox.sizeDelta / 2);
             Vector2 max = selectionBox.anchoredPosition + (selectionBox.sizeDelta / 2);
@@ -141,6 +144,14 @@ public class SelectionController : MonoBehaviour
                 }
             }
         }
+        if (selectedUnits.Count == 1) SetActiveUnit(selectedUnits[0]);
+
+
+    }
+
+    private void SetActiveUnit(ControllableUnit activeUnit)
+    {
+        this.activeUnit = activeUnit;
     }
 
 }

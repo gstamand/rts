@@ -2,34 +2,92 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.InputSystem;
 
 public class InputController : MonoBehaviour
 {
 
-
     public SelectionController selectionController;
+    public AbilityController abilityController;
     public CameraController cameraController;
 
     public float panBorderThickness = 10f;
-    void Update()
+
+    public void OnMove(InputAction.CallbackContext context)
     {
-        if (Input.GetMouseButtonDown(1))
+        if (context.performed)
         {
+            Debug.Log("MOVE");
             selectionController.MoveSelectedUnits();
+            abilityController.CancelQueuedAbility();
         }
-        if (Input.GetMouseButtonDown(0))
+    }
+    public void OnSelect(InputAction.CallbackContext context)
+    {
+        if (context.performed)
         {
-            selectionController.StartNewSelection();
+            Debug.Log("OnSelectPerformed");
+            if (abilityController.isAbilityQueued)
+            {
+                abilityController.CastQueuedAbility();
+            }
+            else
+            {
+                selectionController.SelectClick();
+            }
+
         }
-        if (Input.GetMouseButtonUp(0))
+    }
+    public void OnSelectHold(InputAction.CallbackContext context)
+    {
+        if (context.performed)
         {
+            Debug.Log("OnSelectHoldPerformed");
+            selectionController.StartSelectionBox();
+        }
+        if (context.canceled)
+        {
+            Debug.Log("OnSelectHoldReleased");
             selectionController.ReleaseSelectionBox();
         }
-        if (Input.GetMouseButton(0))
+    }
+    public void OnAction1(InputAction.CallbackContext context)
+    {
+        QueueAction(context, AbilityController.Abilities.Ability1);
+    }
+    public void OnAction2(InputAction.CallbackContext context)
+    {
+        QueueAction(context, AbilityController.Abilities.Ability2);
+    }
+    public void OnAction3(InputAction.CallbackContext context)
+    {
+        QueueAction(context, AbilityController.Abilities.Ability3);
+    }
+    public void OnAction4(InputAction.CallbackContext context)
+    {
+        QueueAction(context, AbilityController.Abilities.Ability4);
+    }
+
+    private void QueueAction(InputAction.CallbackContext context, AbilityController.Abilities ability)
+    {
+        if (context.performed)
         {
-            selectionController.UpdateSelectionBox(Input.mousePosition);
+            Debug.Log(ability);
+            if (selectionController.activeUnit != null)
+            {
+                if (selectionController.activeUnit.delayRemaining < 0) abilityController.QueueAbility(ability);
+            }
         }
-        if(Input.mousePosition.y >= Screen.height - panBorderThickness)
+    }
+
+    void Update()
+    {
+        CheckMousePosition();
+    }
+
+    void CheckMousePosition()
+    {
+        if (Input.mousePosition.y >= Screen.height - panBorderThickness)
         {
             cameraController.MoveCameraForward();
         }
@@ -46,8 +104,5 @@ public class InputController : MonoBehaviour
             cameraController.MoveCameraLeft();
         }
     }
-
-
     
-
 }

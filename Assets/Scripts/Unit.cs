@@ -11,6 +11,7 @@ public class Unit : MonoBehaviour
 
     private int moveSpeed;
     public NavMeshAgent navMeshAgent;
+    public bool inCombat = false;
 
     // Start is called before the first frame update
     void Start()
@@ -22,5 +23,10 @@ public class Unit : MonoBehaviour
     void Update()
     {
         
+    }
+
+    public void SetDestination(Vector3 destination)
+    {
+        navMeshAgent.SetDestination(destination);
     }
 }

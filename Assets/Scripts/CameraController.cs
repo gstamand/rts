@@ -14,26 +14,45 @@ public class CameraController : MonoBehaviour
         Vector3 pos = transform.position;
 
     }
-
     public void MoveCameraForward()
+    {
+        Forward();
+        Right();
+    }
+    public void MoveCameraBackward()
+    {
+        Backward();
+        Left();
+    }
+    public void MoveCameraLeft()
+    {
+        Forward();
+        Left();
+    }
+    public void MoveCameraRight()
+    {
+        Backward();
+        Right();
+    }
+    private void Forward()
     {
         Vector3 pos = transform.position;
         pos.z += panSpeed * Time.deltaTime;
         transform.position = pos;
     }
-    public void MoveCameraBackward()
+    private void Backward()
     {
         Vector3 pos = transform.position;
         pos.z -= panSpeed * Time.deltaTime;
         transform.position = pos;
     }
-    public void MoveCameraLeft()
+    private void Left()
     {
         Vector3 pos = transform.position;
         pos.x -= panSpeed * Time.deltaTime;
         transform.position = pos;
     }
-    public void MoveCameraRight()
+    private void Right()
     {
         Vector3 pos = transform.position;
         pos.x += panSpeed * Time.deltaTime;
